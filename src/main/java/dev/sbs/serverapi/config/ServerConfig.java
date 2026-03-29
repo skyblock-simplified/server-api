@@ -57,6 +57,11 @@ public final class ServerConfig {
     private final @NotNull LogLevel rootLogLevel;
     private final boolean apiKeyAuthEnabled;
     private final boolean springdocEnabled;
+    private final boolean actuatorEnabled;
+    private final @NotNull ConcurrentList<String> actuatorExposedEndpoints;
+    private final @NotNull String actuatorBasePath;
+    private final int managementPort;
+    private final @NotNull HealthDetailsVisibility healthShowDetails;
 
     /**
      * Returns a new {@link Builder} for constructing a {@link ServerConfig} instance.
@@ -144,6 +149,17 @@ public final class ServerConfig {
         props.put("springdoc.use-root-path", this.springdocEnabled);
         props.put("springdoc.api-docs.path", "/v3/api-docs");
 
+        if (this.actuatorEnabled) {
+            props.put("management.endpoints.web.exposure.include", String.join(",", this.actuatorExposedEndpoints));
+            props.put("management.endpoints.web.base-path", this.actuatorBasePath);
+            props.put("management.endpoint.health.show-details", this.healthShowDetails.getValue());
+            if (this.managementPort > 0)
+                props.put("management.server.port", this.managementPort);
+        } else {
+            props.put("management.endpoints.enabled-by-default", false);
+            props.put("management.endpoints.web.exposure.include", "");
+        }
+
         return props.toUnmodifiableMap();
     }
 
@@ -206,6 +222,14 @@ public final class ServerConfig {
         private LogLevel rootLogLevel = LogLevel.INFO;
         private boolean apiKeyAuthEnabled = true;
         private boolean springdocEnabled = true;
+        private boolean actuatorEnabled = false;
+        @BuildFlag(nonNull = true)
+        private ConcurrentList<String> actuatorExposedEndpoints = Concurrent.newList("health", "info");
+        @BuildFlag(nonNull = true)
+        private String actuatorBasePath = "/actuator";
+        private int managementPort = -1;
+        @BuildFlag(nonNull = true)
+        private HealthDetailsVisibility healthShowDetails = HealthDetailsVisibility.NEVER;
 
         /** Sets the server port. */
         public @NotNull Builder withPort(int port) {
@@ -369,6 +393,36 @@ public final class ServerConfig {
             return this;
         }
 
+        /** Sets whether Spring Boot Actuator endpoints are enabled. */
+        public @NotNull Builder withActuatorEnabled(boolean actuatorEnabled) {
+            this.actuatorEnabled = actuatorEnabled;
+            return this;
+        }
+
+        /** Sets the actuator endpoints exposed over HTTP. */
+        public @NotNull Builder withActuatorExposedEndpoints(@NotNull ConcurrentList<String> actuatorExposedEndpoints) {
+            this.actuatorExposedEndpoints = actuatorExposedEndpoints;
+            return this;
+        }
+
+        /** Sets the base path for actuator endpoints. */
+        public @NotNull Builder withActuatorBasePath(@NotNull String actuatorBasePath) {
+            this.actuatorBasePath = actuatorBasePath;
+            return this;
+        }
+
+        /** Sets a separate port for management endpoints, or {@code -1} to use the server port. */
+        public @NotNull Builder withManagementPort(int managementPort) {
+            this.managementPort = managementPort;
+            return this;
+        }
+
+        /** Sets the visibility level for health endpoint details. */
+        public @NotNull Builder withHealthShowDetails(@NotNull HealthDetailsVisibility healthShowDetails) {
+            this.healthShowDetails = healthShowDetails;
+            return this;
+        }
+
         /**
          * Validates builder flags and constructs an immutable {@link ServerConfig}.
          *
@@ -405,7 +459,12 @@ public final class ServerConfig {
                 this.applicationName,
                 this.rootLogLevel,
                 this.apiKeyAuthEnabled,
-                this.springdocEnabled
+                this.springdocEnabled,
+                this.actuatorEnabled,
+                this.actuatorExposedEndpoints,
+                this.actuatorBasePath,
+                this.managementPort,
+                this.healthShowDetails
             );
         }
 
@@ -429,6 +488,21 @@ public final class ServerConfig {
         NONE,
         NATIVE,
         FRAMEWORK
+
+    }
+
+    /**
+     * Maps to the {@code management.endpoint.health.show-details} Spring Boot property.
+     */
+    @Getter
+    @RequiredArgsConstructor
+    public enum HealthDetailsVisibility {
+
+        NEVER("never"),
+        WHEN_AUTHORIZED("when-authorized"),
+        ALWAYS("always");
+
+        private final @NotNull String value;
 
     }
 

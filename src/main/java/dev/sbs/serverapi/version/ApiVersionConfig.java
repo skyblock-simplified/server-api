@@ -1,6 +1,7 @@
 package dev.sbs.serverapi.version;
 
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcRegistrations;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,7 +28,7 @@ public class ApiVersionConfig {
     }
 
     @Bean
-    public @NotNull VersionRegistryService versionRegistryService(@NotNull RequestMappingHandlerMapping handlerMapping) {
+    public @NotNull VersionRegistryService versionRegistryService(@Qualifier("requestMappingHandlerMapping") @NotNull RequestMappingHandlerMapping handlerMapping) {
         return new VersionRegistryService(handlerMapping);
     }
 

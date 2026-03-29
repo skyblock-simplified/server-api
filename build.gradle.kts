@@ -36,6 +36,7 @@ dependencies {
 
     // Exported dependencies (available to consumers)
     api("dev.sbs:api:0.1.0")
+    api(libs.spring.boot.actuator)
     api(libs.spring.boot.web)
 }
 
