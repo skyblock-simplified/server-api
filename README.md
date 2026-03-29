@@ -149,8 +149,9 @@ public class ItemController {
 }
 ```
 
-Consumers must include `dev.sbs.serverapi` in their `scanBasePackages` for
-Spring to discover the configuration beans, interceptors, and error handler.
+> [!IMPORTANT]
+> Consumers must include `dev.sbs.serverapi` in their `scanBasePackages` for
+> Spring to discover the configuration beans, interceptors, and error handler.
 
 ## Architecture
 
@@ -204,12 +205,11 @@ Header-based API key authentication via the `@ApiKeyProtected` annotation:
 | `SecurityHeaderInterceptor` | Sets `X-Content-Type-Options: nosniff` on every response |
 | `ApiKeyConfig` | `@ConditionalOnProperty(name = "api.key.authentication.enabled", havingValue = "true")` |
 
-The role hierarchy is defined by declaration order in `ApiKeyRole` - earlier
-entries inherit all permissions of later entries:
-
-```
-DEVELOPER > SUPER_ADMIN > ADMIN > SUPER_MODERATOR > MODERATOR > SUPER_USER > USER > LIMITED_ACCESS
-```
+> [!NOTE]
+> The role hierarchy is defined by declaration order in `ApiKeyRole` - earlier entries inherit all permissions of later entries:
+> ```
+> DEVELOPER > SUPER_ADMIN > ADMIN > SUPER_MODERATOR > MODERATOR > SUPER_USER > USER > LIMITED_ACCESS
+> ```
 
 ### Error Handling
 
@@ -221,6 +221,10 @@ DEVELOPER > SUPER_ADMIN > ADMIN > SUPER_MODERATOR > MODERATOR > SUPER_USER > USE
 |---------------|----------|
 | `text/html` | Cloudflare-style HTML error page rendered by `ErrorPageRenderer` |
 | Other (e.g. `application/json`) | JSON error body via overridable `buildErrorBody()` |
+
+> [!TIP]
+> Override `ErrorController.buildErrorBody()` in a subclass to return a
+> project-specific JSON error response type instead of the default map.
 
 The HTML error pages show three status columns (Client, Server, API) with
 error/ok indicators, the error code, a human-readable description, suggested
@@ -292,6 +296,11 @@ server-api/
 ├── src/main/resources/error/
 │   ├── error-page.css                 # Minified Cloudflare-style CSS (MIT)
 │   └── error-page.html                # HTML template with {{PLACEHOLDER}} tokens
+├── src/test/java/dev/sbs/serverapi/
+│   ├── TestServer.java                # Runnable test application
+│   └── controller/
+│       ├── TestApiKeyController.java  # API key auth test endpoints
+│       └── TestVersionController.java # API versioning test endpoints
 ├── build.gradle.kts
 └── gradle/libs.versions.toml          # Version catalog
 ```
@@ -306,10 +315,53 @@ server-api/
 | simplified-annotations | 1.0.4 | Custom annotation processing |
 | JUnit 5 | 5.11.4 | Testing |
 | Hamcrest | 2.2 | Test matchers |
+| Spring Boot Starter Test | 3.4.5 | Integration testing with `@SpringBootTest` |
 
-**Transitive exports:** Consumers that depend on `server-api` automatically
-receive both `api:0.1.0` and `spring-boot-starter-web` via `api()`
-dependencies.
+> [!NOTE]
+> Consumers that depend on `server-api` automatically receive both `api:0.1.0`
+> and `spring-boot-starter-web` via `api()` dependencies - no need to declare
+> them separately.
+
+## Testing the Framework
+
+The test source set includes a self-contained `TestServer` and example
+controllers for exercising the framework without external dependencies.
+
+### Running the TestServer
+
+Run `dev.sbs.serverapi.TestServer.main()` from your IDE to start a lightweight
+server on port 8080, then exercise the framework features:
+
+```bash
+# API versioning
+curl http://localhost:8080/v1/hello
+curl http://localhost:8080/v2/hello
+curl http://localhost:8080/v3/hello
+curl http://localhost:8080/default
+
+# API key authentication (requires X-API-Key header)
+curl -H "X-API-Key: dev-key-777" http://localhost:8080/api/basic
+curl -H "X-API-Key: dev-key-777" http://localhost:8080/api/admin-panel
+curl -H "X-API-Key: dev-key-777" http://localhost:8080/api/restart -X POST
+
+# Error handling
+curl http://localhost:8080/v99/hello        # Invalid version
+curl http://localhost:8080/nonexistent      # 404
+curl http://localhost:8080/hello            # Missing version
+```
+
+### Test API Keys
+
+> [!IMPORTANT]
+> The `ApiKeyService` currently ships with hardcoded test keys. Replace or
+> extend it to load keys from a database or external service for production use.
+
+
+| Key | Roles | Rate Limit |
+|---|---|---|
+| `dev-key-777` | `DEVELOPER` (inherits all) | 100 req/60s |
+| `mod-key-555` | `MODERATOR` | 50 req/60s |
+| `service-key-123` | `USER`, `LIMITED_ACCESS` | 10 req/60s |
 
 ## Contributing
 
