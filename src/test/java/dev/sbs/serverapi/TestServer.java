@@ -28,7 +28,8 @@ public class TestServer {
         application.setDefaultProperties(
             ServerConfig.builder()
                 .withApplicationName("server-api-test")
-                .isSpringdocDisabled()
+                //.isSpringdocDisabled()
+                .isApiKeyAuthDisabled()
                 .isActuatorEnabled()
                 .build()
                 .toProperties()
