@@ -1,0 +1,112 @@
+/* Dark theme overrides (Dark Reader Dynamic mode palette) */
+
+body, html {
+    --text-opacity: 1;
+    color: #e8e6e3;
+    color: rgba(232, 230, 227, var(--text-opacity));
+    background-color: #0f1112;
+}
+
+.bg-white {
+    --bg-opacity: 1;
+    background-color: #0f1112;
+    background-color: rgba(15, 17, 18, var(--bg-opacity));
+}
+
+.border-gray-300 {
+    --border-opacity: 1;
+    border-color: #3b3d3e;
+    border-color: rgba(59, 61, 62, var(--border-opacity));
+}
+
+.text-black-dark {
+    --text-opacity: 1;
+    color: #e8e6e3;
+    color: rgba(232, 230, 227, var(--text-opacity));
+}
+
+.text-gray-600 {
+    --text-opacity: 1;
+    color: #a8a29e;
+    color: rgba(168, 162, 158, var(--text-opacity));
+}
+
+.text-red-error {
+    --text-opacity: 1;
+    color: #e74c4e;
+    color: rgba(231, 76, 78, var(--text-opacity));
+}
+
+.text-green-success {
+    --text-opacity: 1;
+    color: #a8d44a;
+    color: rgba(168, 212, 74, var(--text-opacity));
+}
+
+a {
+    --text-opacity: 1;
+    color: #4a9fd5;
+    color: rgba(74, 159, 213, var(--text-opacity));
+}
+
+a:hover {
+    --text-opacity: 1;
+    color: #f89b3f;
+    color: rgba(248, 155, 63, var(--text-opacity));
+}
+
+.bg-gradient-gray {
+    background-image: -webkit-linear-gradient(top, #262829, #1e2021 3%, #1e2021 97%, #262829);
+    background-image: linear-gradient(to bottom, #262829, #1e2021 3%, #1e2021 97%, #262829);
+}
+
+.cf-error-source:after {
+    --bg-opacity: 1;
+    background-color: #0f1112;
+    background-color: rgba(15, 17, 18, var(--bg-opacity));
+    box-shadow: 0 0 4px 4px #262829;
+}
+
+.code-label {
+    background-color: #2a2c2d;
+    color: #c8c3bc;
+}
+
+code {
+    background-color: #2a2c2d;
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+}
+
+/* Override inline style="color: #2f7bbf" on Server h3 */
+#cf-cloudflare-status h3 {
+    color: #4a9fd5 !important;
+}
+
+#cf-wrapper .cf-button {
+    color: #4a9fd5;
+    border-color: #4a9fd5;
+}
+
+#cf-wrapper .cf-button:hover {
+    color: #fff;
+    background-color: #1a3a5c;
+}
+
+.cf-error-footer .cf-footer-ip-reveal-btn {
+    color: #4a9fd5;
+}
+
+.cf-error-footer .cf-footer-ip-reveal-btn:hover {
+    color: #f08a2e;
+}
+
+/* Responsive border overrides */
+
+@media (max-width: 720px) {
+    .md\:border-gray-400 {
+        --border-opacity: 1;
+        border-color: #3b3d3e;
+        border-color: rgba(59, 61, 62, var(--border-opacity));
+    }
+}

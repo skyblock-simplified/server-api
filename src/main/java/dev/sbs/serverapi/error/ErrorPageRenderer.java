@@ -31,6 +31,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class ErrorPageRenderer {
 
     private static final @NotNull String CSS = loadResource("error/error-page.css");
+    private static final @NotNull String DARK_CSS = loadResource("error/error-page-dark.css");
     private static final @NotNull String TEMPLATE = loadResource("error/error-page.html");
 
     /**
@@ -94,7 +95,7 @@ public final class ErrorPageRenderer {
         Map<Placeholder, String> values = new EnumMap<>(Placeholder.class);
 
         values.put(Placeholder.PAGE_TITLE, statusCode + ": " + title);
-        values.put(Placeholder.CSS, CSS);
+        values.put(Placeholder.CSS, CSS + DARK_CSS);
         values.put(Placeholder.HEADING_TITLE, title);
         values.put(Placeholder.ERROR_CODE, String.valueOf(statusCode));
         values.put(Placeholder.TIMESTAMP, java.time.Instant.now().toString());
