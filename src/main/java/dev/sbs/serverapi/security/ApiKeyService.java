@@ -1,33 +1,30 @@
 package dev.sbs.serverapi.security;
 
-import dev.sbs.api.collection.concurrent.Concurrent;
-import dev.sbs.api.collection.concurrent.ConcurrentMap;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
 
 /**
- * Manages API key storage, validation, rate limiting, and permission resolution.
+ * Manages API key validation, rate limiting, and permission resolution.
  *
- * <p>Currently uses hardcoded test keys. The permission check delegates to
- * {@link ApiKeyRoleHierarchy} for role expansion before matching.</p>
+ * <p>Delegates key lookups to an {@link ApiKeyStore} supplied by the consuming
+ * application, so the framework does not own any concrete key source. Permission
+ * checks expand the caller's assigned roles through {@link ApiKeyRoleHierarchy}
+ * before matching against the required roles.
  */
+@Log4j2
 @RequiredArgsConstructor
 public class ApiKeyService {
 
-    private final @NotNull ConcurrentMap<String, ApiKey> apiKeys = Concurrent.newMap();
     private final @NotNull ApiKeyRoleHierarchy hierarchyService;
+    private final @NotNull ApiKeyStore store;
 
-    {
-        apiKeys.put("dev-key-777", new ApiKey("dev-key-777",
-            Concurrent.newSet(ApiKeyRole.DEVELOPER), 100, 60));
-
-        apiKeys.put("mod-key-555", new ApiKey("mod-key-555",
-            Concurrent.newSet(ApiKeyRole.MODERATOR), 50, 60));
-
-        apiKeys.put("service-key-123", new ApiKey("service-key-123",
-            Concurrent.newSet(ApiKeyRole.USER, ApiKeyRole.LIMITED_ACCESS), 10, 60));
+    @PostConstruct
+    private void logStore() {
+        log.info("ApiKeyService initialized with store: {}", store.getClass().getSimpleName());
     }
 
     /**
@@ -37,7 +34,7 @@ public class ApiKeyService {
      * @return {@code true} if the key is registered
      */
     public boolean isValidApiKey(@NotNull String apiKey) {
-        return apiKeys.containsKey(apiKey);
+        return store.findByKey(apiKey).isPresent();
     }
 
     /**
@@ -47,8 +44,7 @@ public class ApiKeyService {
      * @return {@code true} if the key is rate-limited and the request should be rejected
      */
     public boolean isRateLimited(@NotNull String apiKey) {
-        ApiKey key = apiKeys.get(apiKey);
-        return key != null && !key.allowRequest();
+        return store.findByKey(apiKey).map(key -> !key.allowRequest()).orElse(false);
     }
 
     /**
@@ -60,7 +56,7 @@ public class ApiKeyService {
      * @return {@code true} if the key holds at least one of the required roles
      */
     public boolean hasPermission(@NotNull String apiKey, @NotNull ApiKeyRole[] requiredPermissions) {
-        ApiKey key = apiKeys.get(apiKey);
+        ApiKey key = store.findByKey(apiKey).orElse(null);
         if (key == null) return false;
 
         if (requiredPermissions.length == 0)

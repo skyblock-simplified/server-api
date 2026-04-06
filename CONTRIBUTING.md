@@ -41,18 +41,7 @@ project follows.
    cd server-api
    ```
 
-2. **Clone the `api` module alongside** (for local development)
-
-   This module depends on the [api](https://github.com/SkyBlock-Simplified/api)
-   module (`dev.sbs:api:0.1.0`). For local development, clone the `api`
-   repository alongside this one and use a Gradle composite build.
-
-   ```bash
-   cd ..
-   git clone https://github.com/SkyBlock-Simplified/api.git
-   ```
-
-3. **Build the project**
+2. **Build the project**
 
    The Gradle wrapper is included - no separate Gradle installation is needed.
 

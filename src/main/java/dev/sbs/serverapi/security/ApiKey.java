@@ -12,7 +12,13 @@ import java.util.concurrent.atomic.AtomicLong;
  * An API key with associated {@link ApiKeyRole} roles and sliding window rate limit state.
  *
  * <p>Rate limiting uses a synchronized sliding window counter that estimates the current
- * request rate across two adjacent time windows.</p>
+ * request rate across two adjacent time windows.
+ *
+ * <p>TODO: rate-limit state (the {@code windowCounts} map and {@link #allowRequest()} logic)
+ * should be extracted out of this class and owned by {@link ApiKeyService}, keyed by
+ * {@link #getKeyValue()}. That extraction decouples identity from counter state, lets
+ * {@link ApiKeyStore} implementations return fresh instances without resetting counters,
+ * and opens the door to distributing rate-limit state via a Hazelcast {@code IMap}.
  */
 @Getter
 @RequiredArgsConstructor

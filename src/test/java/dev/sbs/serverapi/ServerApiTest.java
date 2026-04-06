@@ -1,9 +1,18 @@
 package dev.sbs.serverapi;
 
+import dev.sbs.serverapi.security.ApiKey;
+import dev.sbs.serverapi.security.ApiKeyRole;
+import dev.sbs.serverapi.security.ApiKeyStore;
+import dev.sbs.serverapi.security.InMemoryApiKeyStore;
+import dev.simplified.collection.Concurrent;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -16,7 +25,28 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @SpringBootTest(classes = TestServer.class, properties = "api.key.authentication.enabled=true")
 @AutoConfigureMockMvc
+@Import(ServerApiTest.TestApiKeyStoreConfig.class)
 class ServerApiTest {
+
+    /**
+     * Supplies the fixture keys that the API-key test methods below rely on.
+     * Rate limits are uncapped to keep assertions deterministic under repeated CI runs.
+     */
+    @TestConfiguration
+    static class TestApiKeyStoreConfig {
+
+        @Bean
+        public @NotNull ApiKeyStore testApiKeyStore() {
+            return new InMemoryApiKeyStore()
+                .put(new ApiKey("dev-key-777",
+                    Concurrent.newSet(ApiKeyRole.DEVELOPER), Integer.MAX_VALUE, 60))
+                .put(new ApiKey("mod-key-555",
+                    Concurrent.newSet(ApiKeyRole.MODERATOR), Integer.MAX_VALUE, 60))
+                .put(new ApiKey("service-key-123",
+                    Concurrent.newSet(ApiKeyRole.USER, ApiKeyRole.LIMITED_ACCESS), Integer.MAX_VALUE, 60));
+        }
+
+    }
 
     @Autowired
     private MockMvc mockMvc;

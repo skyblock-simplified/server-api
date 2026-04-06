@@ -39,7 +39,9 @@ dependencies {
     testImplementation(libs.spring.boot.test)
 
     // Exported dependencies (available to consumers)
-    api("dev.sbs:api:0.1.0")
+    api("com.github.simplified-dev:gson-extras:master-SNAPSHOT")
+    api("com.github.simplified-dev:client:master-SNAPSHOT")
+    api(libs.gson)
     api(libs.spring.boot.actuator)
     api(libs.spring.boot.web)
 }

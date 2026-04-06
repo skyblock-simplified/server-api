@@ -24,7 +24,7 @@ See the root [`CLAUDE.md`](../CLAUDE.md) for cross-cutting patterns.
 
 **`config/`** - Server-wide configuration:
 - `ServerConfig` - Immutable configuration class following the `ClassBuilder` pattern. Inner `Builder` with `@BuildFlag` validation. Static factories: `builder()` for full control, `optimized()` for a production-tuned preset. `toProperties()` converts fields to a `ConcurrentMap<String, Object>` for `SpringApplication.setDefaultProperties()`. Includes `springdocEnabled` toggle controlling SpringDoc/Scalar properties.
-- `ServerWebConfig` - Framework-level `WebMvcConfigurer` that auto-registers `SecurityHeaderInterceptor` as a `MappedInterceptor` and configures HTTP message converters (`StringHttpMessageConverter` first for HTML error pages, then `GsonHttpMessageConverter` for JSON). Uses a consumer-provided `Gson` `@Bean` if available, otherwise falls back to `SimplifiedApi.getGson()`.
+- `ServerWebConfig` - Framework-level `WebMvcConfigurer` that auto-registers `SecurityHeaderInterceptor` as a `MappedInterceptor` and configures HTTP message converters (`StringHttpMessageConverter` first for HTML error pages, then `GsonHttpMessageConverter` for JSON). Uses a consumer-provided `Gson` `@Bean` if available, otherwise falls back to a default `Gson` created from `GsonSettings.defaults()`.
 
 **`error/`** - Global error handling and HTML error page rendering:
 - `ErrorController` - Global `@RestControllerAdvice` extending `ResponseEntityExceptionHandler`. Performs content negotiation via the `Accept` header: browsers (`text/html`) receive Cloudflare-style HTML error pages, while API clients receive JSON. Overridable `buildErrorBody()` method allows consumers to customize JSON error response format. Overrides `handleNoResourceFoundException` to detect version violations on 404s.
@@ -39,9 +39,12 @@ See the root [`CLAUDE.md`](../CLAUDE.md) for cross-cutting patterns.
 - `ApiKey` - API key with roles, rate limit config, and sliding window counter state.
 - `ApiKeyProtected` - TYPE and METHOD level annotation for API key requirements.
 - `ApiKeyAuthenticationInterceptor` - `HandlerInterceptor` for auth/rate/perms enforcement.
-- `ApiKeyService` - Key storage, validation, rate limiting, and permission resolution.
+- `ApiKeyStore` - SPI interface consumers implement to supply {@link ApiKey} instances to the framework. Single method `findByKey(String)`. Documents an identity contract: the same {@code ApiKey} reference must be returned across lookups so sliding-window rate-limit state on the instance survives.
+- `InMemoryApiKeyStore` - Public reference `ApiKeyStore` implementation backed by a concurrent map. Suitable for tests, local development, and stopgap production wiring before a persistent store is available.
+- `ApiKeyService` - Validation, rate limiting, and permission resolution; delegates all key lookups to an injected `ApiKeyStore`. Owns no keys itself.
 - `ApiKeyRoleHierarchy` - Expands assigned roles into the full reachable set.
-- `ApiKeyConfig` - `@ConditionalOnProperty(name = "api.key.authentication.enabled", havingValue = "true")`.
+- `ApiKeyConfig` - `@ConditionalOnProperty(name = "api.key.authentication.enabled", havingValue = "true")`. Declares the bean definitions (`ApiKeyRoleHierarchy`, `ApiKeyService`, `ApiKeyAuthenticationInterceptor`). **Intentionally declares no default `ApiKeyStore` bean** - consumers must supply one, otherwise startup fails fast with `NoSuchBeanDefinitionException`. A silent empty fallback would 401 every request and be extremely confusing to debug.
+- `ApiKeyWebMvcConfig` - `WebMvcConfigurer` that registers `ApiKeyAuthenticationInterceptor` on `/**`. Split out from `ApiKeyConfig` so the interceptor is constructor-injected as a managed bean rather than instantiated via `@Configuration` self-invocation.
 - `security/exception/` - `SecurityException` base and four leaf exceptions with internalized messages.
 
 **`version/`** - URL-path-based API versioning (`/v1/endpoint`, `/v2/endpoint`):
@@ -82,6 +85,18 @@ public Gson gson() {
     return myCustomGson;
 }
 ```
+
+When `api.key.authentication.enabled=true` (the default), consumers **must** provide an `ApiKeyStore` bean. For quick bring-up, seed an `InMemoryApiKeyStore`:
+
+```java
+@Bean
+public ApiKeyStore apiKeyStore() {
+    return new InMemoryApiKeyStore()
+        .put(new ApiKey("my-key", Concurrent.newSet(ApiKeyRole.USER), 100, 60));
+}
+```
+
+For production, implement `ApiKeyStore` against a database (e.g., wrapping a `JpaRepository`) with an internal identity map so sliding-window rate-limit state on `ApiKey` survives repeated lookups. See the identity contract in `ApiKeyStore`'s Javadoc.
 
 ### Configuration
 

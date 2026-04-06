@@ -58,12 +58,12 @@ pages, and programmatic server configuration.
 
 ### Installation
 
-This module depends on the [api](../api) module, declared as a Maven
-coordinate (`dev.sbs:api:0.1.0`). For local development you can clone both
-repositories side by side and use a Gradle composite build:
+This module pulls its core utilities (gson-extras, client) directly from the
+[simplified-dev](https://github.com/simplified-dev) library set via JitPack
+coordinates declared in `build.gradle.kts`. There is no longer a separate
+`api` module to clone.
 
 ```bash
-git clone https://github.com/SkyBlock-Simplified/api.git
 git clone https://github.com/SkyBlock-Simplified/server-api.git
 cd server-api
 ```
@@ -116,7 +116,7 @@ dependencies {
 public class MyApplication {
 
     // Optional: provide a custom Gson instance for the framework's message converters.
-    // If omitted, the SimplifiedApi.getGson() is used.
+    // If omitted, a default Gson built from GsonSettings.defaults() is used.
     @Bean
     public Gson gson() {
         return myCustomGson;
@@ -183,8 +183,8 @@ auth toggle, and SpringDoc toggle.
 the `SecurityHeaderInterceptor` and configures HTTP message converters.
 `StringHttpMessageConverter` is registered first (so `text/html` error pages
 serialize correctly), followed by `GsonHttpMessageConverter` for JSON. If a
-consumer defines a `Gson` `@Bean`, it is used automatically; otherwise the
-`SimplifiedApi.getGson()` instance is used.
+consumer defines a `Gson` `@Bean`, it is used automatically; otherwise a
+default `Gson` created from `GsonSettings.defaults()` is used.
 
 ### API Versioning
 
@@ -326,7 +326,9 @@ server-api/
 | Library | Version | Purpose |
 |---------|---------|---------|
 | Spring Boot Starter Web | 3.4.5 | Spring MVC, embedded Tomcat, auto-configuration |
-| SimplifiedApi | 0.1.0 | Core utility library (collections, builders, reflection, HTTP client) |
+| simplified-dev gson-extras | master-SNAPSHOT | `GsonSettings` and custom Gson type adapters |
+| simplified-dev client | master-SNAPSHOT | `ApiException`/`ApiDecodeException` types used by `ErrorController` |
+| Gson | 2.11.0 | JSON serialization |
 | Lombok | 1.18.36 | Boilerplate reduction |
 | simplified-annotations | 1.0.4 | Custom annotation processing |
 | JUnit 5 | 5.11.4 | Testing |
@@ -334,9 +336,9 @@ server-api/
 | Spring Boot Starter Test | 3.4.5 | Integration testing with `@SpringBootTest` |
 
 > [!NOTE]
-> Consumers that depend on `server-api` automatically receive both `api:0.1.0`
-> and `spring-boot-starter-web` via `api()` dependencies - no need to declare
-> them separately.
+> Consumers that depend on `server-api` automatically receive `gson-extras`,
+> `client`, `gson`, and `spring-boot-starter-web` via `api()` dependencies -
+> no need to declare them separately.
 
 ## Testing the Framework
 

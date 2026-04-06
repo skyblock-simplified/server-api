@@ -1,8 +1,8 @@
 package dev.sbs.serverapi.config;
 
 import com.google.gson.Gson;
-import dev.sbs.api.SimplifiedApi;
 import dev.sbs.serverapi.security.SecurityHeaderInterceptor;
+import dev.simplified.gson.GsonSettings;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.web.servlet.error.ErrorController;
@@ -22,7 +22,7 @@ import org.springframework.web.servlet.handler.MappedInterceptor;
  * always wins content negotiation for {@code application/json}.</p>
  *
  * <p>If a consumer defines a {@link Gson} {@code @Bean}, it is used automatically.
- * Otherwise the {@link SimplifiedApi#getGson()} instance is used as a fallback.</p>
+ * Otherwise a default Gson instance created from {@link GsonSettings#defaults()} is used as a fallback.</p>
  */
 @Configuration
 public class ServerWebConfig implements WebMvcConfigurer {
@@ -30,7 +30,7 @@ public class ServerWebConfig implements WebMvcConfigurer {
     private final @NotNull Gson gson;
 
     public ServerWebConfig(@NotNull ObjectProvider<Gson> gsonProvider) {
-        this.gson = gsonProvider.getIfAvailable(SimplifiedApi::getGson);
+        this.gson = gsonProvider.getIfAvailable(() -> GsonSettings.defaults().create());
     }
 
     @Bean
