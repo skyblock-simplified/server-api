@@ -51,5 +51,11 @@ dependencies {
 tasks {
     test {
         useJUnitPlatform()
+        // Forward the auth-enabled property so users can run
+        // `./gradlew :server-api:test -Dapi.key.authentication.enabled=false`
+        // to exercise the auth-disabled path. Rate-limit tests self-skip via
+        // JUnit Assumptions when the property is false.
+        systemProperty("api.key.authentication.enabled",
+            providers.systemProperty("api.key.authentication.enabled").orElse("true").get())
     }
 }

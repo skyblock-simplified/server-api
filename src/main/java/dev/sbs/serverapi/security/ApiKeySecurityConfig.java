@@ -107,8 +107,8 @@ public class ApiKeySecurityConfig {
     }
 
     @Bean
-    public @NotNull RateLimitFilter rateLimitFilter() {
-        return new RateLimitFilter();
+    public @NotNull RateLimitFilter rateLimitFilter(@NotNull ErrorResponseWriter responseWriter) {
+        return new RateLimitFilter(responseWriter);
     }
 
     @Bean
