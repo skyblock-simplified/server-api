@@ -1,20 +1,15 @@
 package dev.sbs.serverapi.security;
 
-import dev.simplified.collection.Concurrent;
-import dev.simplified.collection.ConcurrentList;
-import dev.simplified.collection.ConcurrentMap;
-import dev.simplified.collection.ConcurrentSet;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * Hierarchical access roles assignable to an API key.
  *
- * <p>Declaration order defines the hierarchy - earlier entries inherit all
- * permissions of later entries. The precomputed {@link #getHierarchy()} map
- * is built once in the static initializer and is immutable thereafter.</p>
- *
- * @see ApiKeyRoleHierarchy
+ * <p>Declaration order defines the hierarchy - earlier entries inherit all permissions
+ * of later entries. The hierarchy is materialized as a Spring Security
+ * {@link org.springframework.security.access.hierarchicalroles.RoleHierarchy} bean in
+ * {@link ApiKeySecurityConfig}, derived from this enum's declaration order so adding a
+ * constant requires no other changes.</p>
  */
 public enum ApiKeyRole {
 
@@ -27,17 +22,14 @@ public enum ApiKeyRole {
     USER,
     LIMITED_ACCESS;
 
-    @Getter
-    private static @NotNull ConcurrentMap<ApiKeyRole, ConcurrentSet<ApiKeyRole>> hierarchy = Concurrent.newMap();
-
-    static {
-        ConcurrentMap<ApiKeyRole, ConcurrentSet<ApiKeyRole>> hierarchy = Concurrent.newMap();
-        ConcurrentList<ApiKeyRole> values = Concurrent.newUnmodifiableList(values());
-
-        for (int i = 0; i < values.size(); i++)
-            hierarchy.put(values.get(i), Concurrent.newSet(values.subList(i, values.size())));
-
-        ApiKeyRole.hierarchy = hierarchy.toUnmodifiable();
+    /**
+     * The Spring Security authority string for this role, prefixed with {@code ROLE_}.
+     *
+     * @return the authority string consumed by {@code hasRole(...)} and
+     *         {@code RoleHierarchyImpl}
+     */
+    public @NotNull String getAuthority() {
+        return "ROLE_" + name();
     }
 
 }

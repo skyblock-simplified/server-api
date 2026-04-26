@@ -6,6 +6,7 @@ hamcrest = "2.2"
 spring-boot = "3.4.5"
 springdoc-openapi = "2.8.16"
 gson = "2.11.0"
+bucket4j = "8.10.1"
 
 [libraries]
 lombok = { group = "org.projectlombok", name = "lombok", version.ref = "lombok" }
@@ -17,6 +18,8 @@ hamcrest = { group = "org.hamcrest", name = "hamcrest", version.ref = "hamcrest"
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 spring-boot-actuator = { group = "org.springframework.boot", name = "spring-boot-starter-actuator", version.ref = "spring-boot" }
 spring-boot-web = { group = "org.springframework.boot", name = "spring-boot-starter-web", version.ref = "spring-boot" }
+spring-boot-security = { group = "org.springframework.boot", name = "spring-boot-starter-security", version.ref = "spring-boot" }
 spring-boot-test = { group = "org.springframework.boot", name = "spring-boot-starter-test", version.ref = "spring-boot" }
+bucket4j-core = { group = "com.bucket4j", name = "bucket4j-core", version.ref = "bucket4j" }
 springdoc-openapi-common = { group = "org.springdoc", name = "springdoc-openapi-starter-common", version.ref = "springdoc-openapi" }
 springdoc-openapi-scalar = { group = "org.springdoc", name = "springdoc-openapi-starter-webmvc-scalar", version.ref = "springdoc-openapi" }

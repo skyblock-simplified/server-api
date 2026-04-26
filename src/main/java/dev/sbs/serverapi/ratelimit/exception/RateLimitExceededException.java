@@ -1,11 +1,12 @@
-package dev.sbs.serverapi.security.exception;
+package dev.sbs.serverapi.ratelimit.exception;
 
+import dev.sbs.serverapi.exception.ServerException;
 import org.springframework.http.HttpStatus;
 
 /**
  * Thrown when an API key has exceeded its allowed request rate.
  */
-public final class RateLimitExceededException extends SecurityException {
+public final class RateLimitExceededException extends ServerException {
 
     /**
      * Constructs a new {@code RateLimitExceededException}.

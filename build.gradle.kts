@@ -44,6 +44,8 @@ dependencies {
     api(libs.gson)
     api(libs.spring.boot.actuator)
     api(libs.spring.boot.web)
+    api(libs.spring.boot.security)
+    api(libs.bucket4j.core)
 }
 
 tasks {

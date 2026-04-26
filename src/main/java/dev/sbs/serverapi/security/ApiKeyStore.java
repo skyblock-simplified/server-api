@@ -5,12 +5,12 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Optional;
 
 /**
- * Source of {@link ApiKey} instances used by {@link ApiKeyService} for
- * authentication, rate limiting, and permission checks.
+ * Source of {@link ApiKey} instances for the {@link ApiKeyAuthenticationProvider}.
  *
- * <p>Implementations are free to return fresh {@code ApiKey} instances on each
- * lookup. Sliding-window rate-limit state is held on {@link ApiKeyService}, keyed
- * by {@link ApiKey#getKeyValue()}, so instance identity does not affect counter
+ * <p>Implementations are free to return fresh {@code ApiKey} instances on each lookup.
+ * Rate-limit state is held externally in
+ * {@link dev.sbs.serverapi.ratelimit.RateLimitFilter} keyed by
+ * {@link ApiKey#getKeyValue()}, so instance identity does not affect counter
  * continuity.</p>
  */
 public interface ApiKeyStore {

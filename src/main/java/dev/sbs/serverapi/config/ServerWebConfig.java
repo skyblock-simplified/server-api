@@ -1,7 +1,7 @@
 package dev.sbs.serverapi.config;
 
 import com.google.gson.Gson;
-import dev.sbs.serverapi.security.SecurityHeaderInterceptor;
+import dev.sbs.serverapi.error.ErrorResponseWriter;
 import dev.simplified.gson.GsonSettings;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.ObjectProvider;
@@ -10,11 +10,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.json.GsonHttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import org.springframework.web.servlet.handler.MappedInterceptor;
 
 /**
- * Framework-level web configuration that registers the {@link SecurityHeaderInterceptor}
- * and configures HTTP message converters for the Gson-based ecosystem.
+ * Framework-level web configuration providing HTTP message converters and the shared
+ * {@link ErrorResponseWriter} for the Gson-based ecosystem.
  *
  * <p>The {@link GsonHttpMessageConverter} is exposed as a {@code @Bean} so that Spring
  * Boot's {@code HttpMessageConverters} places it ahead of the default Jackson converter.
@@ -22,7 +21,13 @@ import org.springframework.web.servlet.handler.MappedInterceptor;
  * always wins content negotiation for {@code application/json}.</p>
  *
  * <p>If a consumer defines a {@link Gson} {@code @Bean}, it is used automatically.
- * Otherwise a default Gson instance created from {@link GsonSettings#defaults()} is used as a fallback.</p>
+ * Otherwise a default Gson instance created from {@link GsonSettings#defaults()} is used
+ * as a fallback.</p>
+ *
+ * <p>Security response headers are no longer set here - Spring Security's
+ * {@code HeadersConfigurer} handles {@code X-Content-Type-Options}, HSTS,
+ * {@code X-Frame-Options}, and {@code Referrer-Policy} via
+ * {@link dev.sbs.serverapi.security.ApiKeySecurityConfig}.</p>
  */
 @Configuration
 public class ServerWebConfig implements WebMvcConfigurer {
@@ -31,11 +36,6 @@ public class ServerWebConfig implements WebMvcConfigurer {
 
     public ServerWebConfig(@NotNull ObjectProvider<Gson> gsonProvider) {
         this.gson = gsonProvider.getIfAvailable(() -> GsonSettings.defaults().create());
-    }
-
-    @Bean
-    public @NotNull MappedInterceptor securityHeaderMappedInterceptor() {
-        return new MappedInterceptor(new String[]{"/**"}, new SecurityHeaderInterceptor());
     }
 
     /**
@@ -62,6 +62,18 @@ public class ServerWebConfig implements WebMvcConfigurer {
         GsonHttpMessageConverter converter = new GsonHttpMessageConverter();
         converter.setGson(this.gson);
         return converter;
+    }
+
+    /**
+     * Shared response writer used by {@link dev.sbs.serverapi.error.ErrorController} and
+     * the Spring Security entry-point and access-denied handlers to render content-negotiated
+     * error responses.
+     *
+     * @return the response writer
+     */
+    @Bean
+    public @NotNull ErrorResponseWriter errorResponseWriter() {
+        return new ErrorResponseWriter(this.gson);
     }
 
 }
