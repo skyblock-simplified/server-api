@@ -46,7 +46,7 @@ public class ApiKeyAuthenticationInterceptor implements HandlerInterceptor {
 
             ApiKey key = this.apiKeyService.resolve(apiKey).orElseThrow(InvalidApiKeyException::new);
 
-            if (!key.allowRequest())
+            if (!this.apiKeyService.allowRequest(key))
                 throw new RateLimitExceededException();
 
             ApiKeyRole[] required = apiKeyProtected.requiredPermissions();

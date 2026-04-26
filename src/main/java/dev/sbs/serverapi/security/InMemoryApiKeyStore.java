@@ -11,13 +11,8 @@ import java.util.Optional;
  * In-memory reference implementation of {@link ApiKeyStore} backed by a
  * {@link ConcurrentMap} keyed by {@link ApiKey#getKeyValue()}.
  *
- * <p>Instances are held directly in the map, so the identity contract of
- * {@link ApiKeyStore} is trivially satisfied: repeated lookups for the same
- * key value return the same {@code ApiKey} reference and its sliding-window
- * rate-limit state is preserved.
- *
  * <p>Suitable for tests, local development, and stopgap production wiring
- * before a persistent store is available.
+ * before a persistent store is available.</p>
  */
 public class InMemoryApiKeyStore implements ApiKeyStore {
 
