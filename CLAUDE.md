@@ -32,9 +32,6 @@ See the root [`CLAUDE.md`](../CLAUDE.md) for cross-cutting patterns.
 - `ErrorResponseWriter` - Shared utility for content-negotiated error responses (HTML vs JSON). Used by `ErrorController` (returns `ResponseEntity`) and by Spring Security's `AuthenticationEntryPoint` / `AccessDeniedHandler` (writes directly to the response). Holds the `Gson` instance for JSON serialization.
 - `ErrorPageRenderer` - Non-instantiable utility class rendering Cloudflare-style HTML error pages. Contains `Placeholder` enum for named `{{TOKEN}}` substitution with XSS escaping, and `ErrorSource` enum (`CLIENT`, `SERVER`, `API`).
 
-**`exception/`** - Server exception hierarchy:
-- `ServerException` - Non-final root exception extending `RuntimeException` with an embedded `HttpStatus` field. Five constructors with `HttpStatus` as first parameter.
-
 **`security/`** - Spring Security-backed API key authentication and authorization:
 - `ApiKey` - Authenticated principal carrying the key string, assigned `ApiKeyRole`s, and rate-limit configuration (`maxRequests`, `windowInSeconds`). `getAuthorities()` derives `SimpleGrantedAuthority("ROLE_" + name)` from the role set.
 - `ApiKeyRole` - Enum of hierarchical access roles. Declaration order defines the hierarchy (earlier constants inherit later constants' authorities). `getAuthority()` returns `"ROLE_" + name()`.

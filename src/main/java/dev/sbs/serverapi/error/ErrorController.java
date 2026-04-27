@@ -1,6 +1,5 @@
 package dev.sbs.serverapi.error;
 
-import dev.sbs.serverapi.exception.ServerException;
 import dev.simplified.client.exception.ApiDecodeException;
 import dev.simplified.client.exception.ApiException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,10 +33,14 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
  * HTML error page rendered by {@link ErrorPageRenderer}, while API clients get JSON error
  * responses.</p>
  *
- * <p>Spring Security 401/403 responses are not handled here - they are intercepted in
- * the security filter chain by {@link dev.sbs.serverapi.security.ApiKeyAuthenticationEntryPoint}
- * and {@link dev.sbs.serverapi.security.ApiKeyAccessDeniedHandler}, which delegate to the
- * same {@link ErrorResponseWriter} for consistent rendering.</p>
+ * <p>Spring Security 401/403 responses raised inside the security filter chain are
+ * intercepted by {@link dev.sbs.serverapi.security.ApiKeyAuthenticationEntryPoint} and
+ * {@link dev.sbs.serverapi.security.ApiKeyAccessDeniedHandler}, which delegate to the
+ * same {@link ErrorResponseWriter}. Method-security exceptions raised by
+ * {@code @PreAuthorize} via AOP unwind through the dispatcher servlet before
+ * {@code ExceptionTranslationFilter} can route them, so the {@link AccessDeniedException}
+ * and {@link AuthenticationException} handlers below mirror the filter's behavior for
+ * that path.</p>
  */
 @Log4j2
 @RequiredArgsConstructor
@@ -72,14 +75,6 @@ public final class ErrorController extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(responseBody, responseHeaders, statusCode);
     }
 
-    @ExceptionHandler(ServerException.class)
-    public @NotNull ResponseEntity<?> handleServerException(
-            @NotNull ServerException ex,
-            @NotNull HttpServletRequest request) {
-        HttpStatus status = ex.getStatus();
-        return this.responseWriter.entity(request, status.value(), ex.getMessage());
-    }
-
     /**
      * Handles {@link MissingApiVersionException} and {@link InvalidApiVersionException}
      * thrown by Spring Framework's API versioning machinery when a request lacks a
@@ -94,9 +89,9 @@ public final class ErrorController extends ResponseEntityExceptionHandler {
     }
 
     /**
-     * Handles {@link AccessDeniedException} thrown by {@link org.springframework.security.access.prepost.PreAuthorize}.
+     * Handles {@link AccessDeniedException} thrown by {@code @PreAuthorize}.
      *
-     * <p>The exception is thrown from the AOP-driven method security interceptor, so it
+     * <p>The exception is raised from the AOP-driven method security interceptor, so it
      * unwinds into the dispatcher servlet's exception handling phase before Spring
      * Security's {@code ExceptionTranslationFilter} can intercept it. We mirror the
      * filter's "anonymous becomes 401" behavior here so unauthenticated callers receive
