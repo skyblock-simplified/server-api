@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import org.springframework.web.util.HtmlUtils;
 
 /**
  * Global exception handler producing consistent error responses for all errors.
@@ -58,14 +59,14 @@ public final class ErrorController extends ResponseEntityExceptionHandler {
             @NotNull WebRequest request) {
         HttpServletRequest servletRequest = ((ServletWebRequest) request).getRequest();
         int code = statusCode.value();
-        String reason = ex.getMessage() != null ? ex.getMessage() : HttpStatus.valueOf(code).getReasonPhrase();
+        String reason = HtmlUtils.htmlEscape(ex.getMessage() != null ? ex.getMessage() : HttpStatus.valueOf(code).getReasonPhrase());
 
         Object responseBody;
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.putAll(headers);
 
         if (ErrorResponseWriter.acceptsHtml(servletRequest)) {
-            responseBody = this.responseWriter.entity(servletRequest, code, reason).getBody();
+            responseBody = this.responseWriter.buildHtml(code, reason, servletRequest);
             responseHeaders.setContentType(MediaType.TEXT_HTML);
         } else {
             responseBody = this.responseWriter.buildBody(code, reason, servletRequest);

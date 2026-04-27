@@ -150,6 +150,20 @@ public class ErrorResponseWriter {
         );
     }
 
+    /**
+     * Renders the Cloudflare-style HTML error page string for the given status, message,
+     * and request. Inputs are HTML-escaped by {@link ErrorPageRenderer}'s placeholder
+     * substitution machinery.
+     *
+     * @param statusCode the HTTP status code
+     * @param message a human-readable error description
+     * @param request the current request
+     * @return the rendered HTML page
+     */
+    public @NotNull String buildHtml(int statusCode, @NotNull String message, @NotNull HttpServletRequest request) {
+        return html(statusCode, message, request, sourceFor(statusCode));
+    }
+
     private static @NotNull String html(int statusCode, @NotNull String message, @NotNull HttpServletRequest request, @NotNull ErrorSource source) {
         return ErrorPageRenderer.render(
             statusCode,
